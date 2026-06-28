@@ -1,0 +1,16 @@
+body {
+  margin: 0;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.leaflet-container {
+  font-family: 'Vazirmatn', sans-serif;
+  z-index: 0;
+}
+
+.leaflet-control-attribution {
+  font-size: 10px;
+}

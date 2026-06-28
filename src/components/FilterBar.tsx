@@ -182,18 +182,6 @@ export function FilterBar({
           justifyContent="space-between"
           gap={2}
         >
-          <FormControlLabel
-            control={
-              <Switch
-                checked={filters.inStockOnly}
-                onChange={(e) => onChange({ inStockOnly: e.target.checked })}
-                color="success"
-              />
-            }
-            label="فقط موجود"
-          />
-
-          <Stack direction="row" alignItems="center" gap={1} sx={{ minWidth: 220 }}>
             <SortIcon fontSize="small" color="action" />
             <Select
               size="small"
@@ -208,7 +196,6 @@ export function FilterBar({
               ))}
             </Select>
           </Stack>
-        </Stack>
       </Stack>
     </Paper>
   );

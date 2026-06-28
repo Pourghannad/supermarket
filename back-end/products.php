@@ -1,6 +1,19 @@
 <?php
 declare(strict_types=1);
 
+// ==========================================
+// CORS Headers – allow all origins
+// ==========================================
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, OPTIONS');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
+
+// Handle preflight OPTIONS request
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit;
+}
+
 // Configuration Constants
 const API_BASE        = 'https://apigateway.okala.com/api';
 const STORES_ENDPOINT = '/Lucifer/v1/StoreRanking/GetAllStores';
@@ -9,10 +22,13 @@ const USER_AGENT      = 'ok/1.0';
 
 /**
  * Sends a standardized JSON error response and terminates the script.
+ * Includes CORS headers to ensure errors are also accessible cross‑origin.
  */
 function sendJsonError(int $statusCode, string $message, array $extra = []): void {
     http_response_code($statusCode);
     header('Content-Type: application/json');
+    // CORS headers are already sent at the top, but we re-send them to be safe
+    header('Access-Control-Allow-Origin: *');
     echo json_encode(array_merge(['error' => $message], $extra));
     exit;
 }
@@ -229,5 +245,7 @@ if ($digikalaMainError !== null) {
 
 http_response_code(200);
 header('Content-Type: application/json');
+// CORS headers already sent, but we re-send for safety
+header('Access-Control-Allow-Origin: *');
 echo json_encode($response);
 exit;

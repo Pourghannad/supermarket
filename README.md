@@ -31,9 +31,16 @@ Open [http://localhost:5173](http://localhost:5173)
 ## Build
 
 ```bash
-npm run build
-npm run preview
+pnpm install
+pnpm run build
+pnpm run preview
 ```
+
+## GitHub Pages
+
+- The project is configured for static deployment via Vite and GitHub Actions.
+- After pushing to the main branch, the workflow in [.github/workflows/deploy-pages.yml](.github/workflows/deploy-pages.yml) will publish the app.
+- The deployed site will be available at https://pourghannad.github.io/supermarket/.
 
 ## Notes
 

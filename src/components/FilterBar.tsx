@@ -7,12 +7,10 @@ import {
   Box,
   Chip,
   Divider,
-  FormControlLabel,
   MenuItem,
   Paper,
   Select,
   Stack,
-  Switch,
   Typography,
 } from '@mui/material';
 import type { DiscountFilter, FilterState, SortOption, SourceFilter } from '../filters';

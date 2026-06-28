@@ -3,10 +3,13 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "homepage": "https://pourghannad.github.io/supermarket/",
+  "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "deploy:pages": "pnpm run build"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",

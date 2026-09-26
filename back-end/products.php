@@ -16,7 +16,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Configuration Constants
 const API_BASE        = 'https://apigateway.okala.com/api';
-const STORES_ENDPOINT = '/Lucifer/v1/StoreRanking/GetAllStores';
+const STORES_ENDPOINT = '/opex/v4/stores/nearby';
+
 const OFFERS_ENDPOINT = '/carousel/v4/offers';
 const USER_AGENT      = 'ok/1.0';
 

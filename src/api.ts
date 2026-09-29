@@ -115,7 +115,21 @@ export function normalizeProduct(product: RawProduct): NormalizedProduct | null 
 }
 
 export function normalizeProducts(products: RawProduct[]): NormalizedProduct[] {
-  return products
-    .map(normalizeProduct)
-    .filter((product): product is NormalizedProduct => product !== null);
+  // The backend can return the same product more than once (e.g. an Okala
+  // product appearing in several carousels). Duplicate `id`s produce
+  // duplicate React keys in ProductGrid, which confuses the reconciler:
+  // stale cards from the previous filter stay mounted, so a source filter
+  // looks like it "shows all items". Drop duplicates, keeping the first
+  // occurrence.
+  const seen = new Set<string>();
+  const result: NormalizedProduct[] = [];
+
+  for (const product of products) {
+    const normalized = normalizeProduct(product);
+    if (normalized === null || seen.has(normalized.id)) continue;
+    seen.add(normalized.id);
+    result.push(normalized);
+  }
+
+  return result;
 }

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>دستیار خرید مواد اولیه</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+    <style>
+        :root {
+            --bg: #f5f6fa;
+            --card: #fff;
+            --line: #e6e8f0;
+            --txt: #1f2430;
+            --muted: #6b7280;
+            --accent: #e8590c;
+            --soft: #fff4e6;
+        }
+
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            padding: 26px 16px 80px;
+            font-family: 'Vazirmatn', Tahoma, sans-serif;
+            background: var(--bg);
+            color: var(--txt);
+            line-height: 1.9;
+        }
+
+        .wrap {
+            max-width: 900px;
+            margin: 0 auto
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 26px
+        }
+
+        h1 {
+            font-size: 1.55rem;
+            margin: 0 0 4px
+        }
+
+        .sub {
+            color: var(--muted);
+            font-size: .92rem;
+            margin: 0
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(20, 25, 40, .06);
+            margin-bottom: 18px
+        }
+
+        .card h2 {
+            font-size: 1.02rem;
+            margin: 0 0 16px;
+            display: flex;
+            align-items: center;
+            gap: 9px
+        }
+
+        .step {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: #fff;
+            font-size: .78rem;
+            font-weight: 700;
+            flex: 0 0 auto
+        }
+
+        .hint {
+            font-size: .8rem;
+            color: var(--muted);
+            margin: 0 0 14px
+        }
+
+        /* ---------- food cards ---------- */
+        .food-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px
+        }
+
+        .food-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            padding: 14px 10px;
+            border: 2px solid var(--line);
+            border-radius: 14px;
+            background: #fff;
+            cursor: pointer;
+            font-family: inherit;
+            color: inherit;
+            transition: .15s;
+            text-align: center
+        }
+
+        .food-card:hover {
+            border-color: #ffc078;
+            transform: translateY(-2px)
+        }
+
+        .food-card.active {
+            border-color: var(--accent);
+            background: var(--soft);
+            box-shadow: 0 0 0 3px #ffe8cc
+        }
+
+        .food-emoji {
+            font-size: 1.9rem;
+            line-height: 1.2
+        }
+
+        .food-name {
+            font-weight: 600;
+            font-size: .95rem
+        }
+
+        .food-desc {
+            font-size: .72rem;
+            color: var(--muted)
+        }
+
+        /* ---------- people ---------- */
+        .people-row {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .step-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: #fff;
+            font-size: 1.25rem;
+            cursor: pointer;
+            font-family: inherit;
+            transition: .15s;
+            line-height: 1
+        }
+
+        .step-btn:hover {
+            background: #fff4e6;
+            border-color: #ffc078
+        }
+
+        #peopleInput {
+            width: 92px;
+            height: 42px;
+            text-align: center;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            font-family: inherit
+        }
+
+        /* ---------- table ---------- */
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        th {
+            font-size: .78rem;
+            color: var(--muted);
+            font-weight: 600;
+            text-align: right;
+            padding: 0 6px 8px;
+            border-bottom: 1px solid var(--line)
+        }
+
+        td {
+            padding: 8px 6px;
+            border-bottom: 1px solid #f3f4f8;
+            font-size: .92rem;
+            vertical-align: middle
+        }
+
+        tr:last-child td {
+            border-bottom: none
+        }
+
+        .c-name {
+            font-weight: 500
+        }
+
+        .c-req {
+            color: var(--muted);
+            font-size: .88rem;
+            white-space: nowrap
+        }
+
+        .have-amount {
+            width: 100%;
+            max-width: 110px;
+            height: 38px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            padding: 0 8px;
+            font-family: inherit;
+            font-size: .9rem;
+            text-align: center;
+            background: #fcfcfe
+        }
+
+        .have-amount:focus {
+            outline: 2px solid #ffd8a8;
+            border-color: var(--accent)
+        }
+
+        .have-unit {
+            height: 38px;
+            border: 1px solid var(--line);
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: .85rem;
+            padding: 0 6px;
+            background: #fcfcfe
+        }
+
+        /* ---------- results ---------- */
+        .summary {
+            font-size: .9rem;
+            color: var(--muted);
+            margin-bottom: 12px
+        }
+
+        .summary b {
+            color: var(--txt)
+        }
+
+        .buy-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            background: var(--soft);
+            border-radius: 12px;
+            margin-bottom: 8px
+        }
+
+        .buy-item .name {
+            font-weight: 600;
+            font-size: .95rem
+        }
+
+        .buy-item .detail {
+            font-size: .75rem;
+            color: #9a6b2f
+        }
+
+        .buy-item .amt {
+            font-weight: 700;
+            color: #d9480f;
+            white-space: nowrap
+        }
+
+        .all-ok {
+            color: #2f9e44;
+            font-weight: 600;
+            text-align: center;
+            padding: 10px 0
+        }
+
+        .covered {
+            margin-top: 12px;
+            font-size: .82rem;
+            color: var(--muted);
+            background: #f1f8f2;
+            border-radius: 10px;
+            padding: 10px 14px
+        }
+
+        .empty {
+            color: var(--muted);
+            text-align: center;
+            padding: 16px 0;
+            font-size: .9rem
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+
+        <header>
+            <h1>🍳 دستیار خرید مواد اولیه</h1>
+            <p class="sub">غذا را انتخاب کنید، تعداد نفرات را بگویید و موجودی خانه را وارد کنید.</p>
+        </header>
+
+        <section class="card">
+            <h2><span class="step">۱</span> غذا را انتخاب کنید</h2>
+            <div class="food-grid" id="foodGrid"></div>
+        </section>
+
+        <section class="card">
+            <h2><span class="step">۲</span> برای چند نفر؟</h2>
+            <div class="people-row">
+                <button class="step-btn" id="minus" type="button">−</button>
+                <input id="peopleInput" type="number" min="1" max="50" value="4">
+                <button class="step-btn" id="plus" type="button">+</button>
+                <span class="hint" style="margin:0">نفر</span>
+            </div>
+        </section>
+
+        <section class="card" id="haveCard" hidden>
+            <h2><span class="step">۳</span> چه مقدار از مواد را دارید؟</h2>
+            <p class="hint">هر چیزی که در خانه ندارید را خالی بگذارید (یا صفر).</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ماده اولیه</th>
+                        <th>مقدار لازم</th>
+                        <th>موجودی شما</th>
+                        <th>واحد</th>
+                    </tr>
+                </thead>
+                <tbody id="ingBody"></tbody>
+            </table>
+        </section>
+
+        <section class="card" id="resultCard" hidden>
+            <h2><span class="step">۴</span> لیست خرید</h2>
+            <div class="summary" id="summary"></div>
+            <div id="buyList"></div>
+            <div id="coveredBox"></div>
+        </section>
+
+    </div>
+
+    <!-- ================= DATA (same as foods.json) ================= -->
+    <script type="application/json" id="foodsData">
+[
+  {
+    "id": "pasta-alfredo",
+    "name": "پاستا آلفردو",
+    "emoji": "🍝",
+    "description": "پاستا با سس خامه‌ای و مرغ",
+    "ingredients": [
+      { "name": "ماکارونی پنه", "perPerson": 100, "unit": "گرم" },
+      { "name": "سینه مرغ", "perPerson": 120, "unit": "گرم" },
+      { "name": "شیر", "perPerson": 125, "unit": "میلی‌لیتر" },
+      { "name": "قارچ", "perPerson": 50, "unit": "گرم" },
+      { "name": "کره", "perPerson": 15, "unit": "گرم" },
+      { "name": "پنیر پارمزان", "perPerson": 20, "unit": "گرم" },
+      { "name": "آرد", "perPerson": 8, "unit": "گرم" },
+      { "name": "سیر", "perPerson": 1, "unit": "حبه" },
+      { "name": "روغن زیتون", "perPerson": 5, "unit": "میلی‌لیتر" }
+    ]
+  },
+  {
+    "id": "gheymeh",
+    "name": "قیمه",
+    "emoji": "🍛",
+    "description": "خورش لپه و گوشت با برنج",
+    "ingredients": [
+      { "name": "گوشت گوساله", "perPerson": 100, "unit": "گرم" },
+      { "name": "لپه", "perPerson": 30, "unit": "گرم" },
+      { "name": "پیاز", "perPerson": 60, "unit": "گرم" },
+      { "name": "رب گوجه‌فرنگی", "perPerson": 20, "unit": "گرم" },
+      { "name": "سیب‌زمینی", "perPerson": 100, "unit": "گرم" },
+      { "name": "لیمو عمانی", "perPerson": 1, "unit": "عدد" },
+      { "name": "زردچوبه", "perPerson": 2, "unit": "گرم" },
+      { "name": "روغن", "perPerson": 15, "unit": "میلی‌لیتر" },
+      { "name": "برنج", "perPerson": 100, "unit": "گرم" }
+    ]
+  },
+  {
+    "id": "ghormeh-sabzi",
+    "name": "قورمه سبزی",
+    "emoji": "🥘",
+    "description": "خورش سبزی با لوبیا قرمز",
+    "ingredients": [
+      { "name": "گوشت گوساله", "perPerson": 100, "unit": "گرم" },
+      { "name": "سبزی قورمه", "perPerson": 120, "unit": "گرم" },
+      { "name": "لوبیا قرمز", "perPerson": 30, "unit": "گرم" },
+      { "name": "پیاز", "perPerson": 50, "unit": "گرم" },
+      { "name": "لیمو عمانی", "perPerson": 1, "unit": "عدد" },
+      { "name": "رب گوجه‌فرنگی", "perPerson": 10, "unit": "گرم" },
+      { "name": "روغن", "perPerson": 15, "unit": "میلی‌لیتر" },
+      { "name": "برنج", "perPerson": 100, "unit": "گرم" }
+    ]
+  },
+  {
+    "id": "kuku-sabzi",
+    "name": "کوکو سبزی",
+    "emoji": "🍳",
+    "description": "کوکو سبزی با گردو و زرشک",
+    "ingredients": [
+      { "name": "تخم‌مرغ", "perPerson": 1.5, "unit": "عدد" },
+      { "name": "سبزی کوکو", "perPerson": 80, "unit": "گرم" },
+      { "name": "آرد", "perPerson": 10, "unit": "گرم" },
+      { "name": "بیکینگ پودر", "perPerson": 1, "unit": "گرم" },
+      { "name": "گردو", "perPerson": 10, "unit": "گرم" },
+      { "name": "زرشک", "perPerson": 5, "unit": "گرم" },
+      { "name": "روغن", "perPerson": 15, "unit": "میلی‌لیتر" },
+      { "name": "ماست", "perPerson": 50, "unit": "گرم" }
+    ]
+  },
+  {
+    "id": "adas-polo",
+    "name": "عدس پلو",
+    "emoji": "🍚",
+    "description": "پلوی عدس با گوشت چرخ‌کرده و کشمش",
+    "ingredients": [
+      { "name": "برنج", "perPerson": 100, "unit": "گرم" },
+      { "name": "عدس", "perPerson": 30, "unit": "گرم" },
+      { "name": "گوشت چرخ‌کرده", "perPerson": 60, "unit": "گرم" },
+      { "name": "پیاز", "perPerson": 50, "unit": "گرم" },
+      { "name": "کشمش", "perPerson": 15, "unit": "گرم" },
+      { "name": "خرما", "perPerson": 1, "unit": "عدد" },
+      { "name": "زعفران", "perPerson": 0.1, "unit": "گرم" },
+      { "name": "زیره", "perPerson": 1, "unit": "گرم" },
+      { "name": "روغن", "perPerson": 15, "unit": "میلی‌لیتر" }
+    ]
+  }
+]
+</script>
+
+    <script>
+        (function () {
+            'use strict';
+
+            /* ---------- unit system ---------- */
+            const UNIT_INFO = {
+                'گرم': { base: 'گرم', factor: 1 },
+                'کیلوگرم': { base: 'گرم', factor: 1000 },
+                'میلی‌لیتر': { base: 'میلی‌لیتر', factor: 1 },
+                'لیتر': { base: 'میلی‌لیتر', factor: 1000 },
+                'عدد': { base: 'عدد', factor: 1 },
+                'حبه': { base: 'حبه', factor: 1 },
+                'قاشق غذاخوری': { base: 'قاشق غذاخوری', factor: 1 },
+                'قاشق چای‌خوری': { base: 'قاشق چای‌خوری', factor: 1 }
+            };
+            const COUNT_UNITS = new Set(['عدد', 'حبه', 'قاشق غذاخوری', 'قاشق چای‌خوری']);
+
+            const unitsFor = base => {
+                const list = Object.keys(UNIT_INFO).filter(u => UNIT_INFO[u].base === base);
+                return list.length ? list : [base];
+            };
+
+            /* ---------- persian number helpers ---------- */
+            const FA = '۰۱۲۳۴۵۶۷۸۹';
+            const toFa = x => String(x).replace(/\d/g, d => FA[+d]);
+
+            function fmtNum(n) {
+                const r = Math.round(n * 10) / 10;
+                const s = Number.isInteger(r) ? String(r) : r.toFixed(1);
+                return toFa(s).replace('.', '٫');
+            }
+
+            // amount is always in the ingredient's BASE unit
+            function fmtAmount(amount, baseUnit) {
+                if (baseUnit === 'گرم' && amount >= 1000) return fmtNum(amount / 1000) + ' کیلوگرم';
+                if (baseUnit === 'میلی‌لیتر' && amount >= 1000) return fmtNum(amount / 1000) + ' لیتر';
+                return fmtNum(amount) + ' ' + baseUnit;
+            }
+
+            /* ---------- data & state ---------- */
+            const FOODS = JSON.parse(document.getElementById('foodsData').textContent);
+
+            const state = {
+                foodId: null,
+                people: 4,
+                have: {}          // ingredientName -> { amount: string, unit: string }
+            };
+
+            const $ = sel => document.querySelector(sel);
+            const currentFood = () => FOODS.find(f => f.id === state.foodId);
+
+            /* ---------- food selection ---------- */
+            function renderFoods() {
+                const grid = $('#foodGrid');
+                grid.innerHTML = FOODS.map(f => `
+      <button type="button" class="food-card ${state.foodId === f.id ? 'active' : ''}" data-id="${f.id}">
+        <span class="food-emoji">${f.emoji || '🍽️'}</span>
+        <span class="food-name">${f.name}</span>
+        <span class="food-desc">${f.description || ''}</span>
+      </button>`).join('');
+
+                grid.querySelectorAll('.food-card').forEach(btn => {
+                    btn.addEventListener('click', () => selectFood(btn.dataset.id));
+                });
+            }
+
+            function selectFood(id) {
+                state.foodId = id;
+                state.have = {};
+
+                const food = currentFood();
+                food.ingredients.forEach(ing => {
+                    state.have[ing.name] = { amount: '', unit: ing.unit };
+                });
+
+                renderFoods();
+                $('#haveCard').hidden = false;
+                $('#resultCard').hidden = false;
+                buildTable();
+                updateDynamic();
+            }
+
+            /* ---------- people ---------- */
+            function setPeople(value) {
+                let n = parseInt(value, 10);
+                if (isNaN(n) || n < 1) n = 1;
+                if (n > 50) n = 50;
+                state.people = n;
+                $('#peopleInput').value = n;
+                updateDynamic();
+            }
+
+            /* ---------- ingredient table ---------- */
+            function buildTable() {
+                const food = currentFood();
+                const tbody = $('#ingBody');
+                if (!food) { tbody.innerHTML = ''; return; }
+
+                tbody.innerHTML = food.ingredients.map((ing, i) => {
+                    const h = state.have[ing.name];
+                    const unitOpts = unitsFor(ing.unit)
+                        .map(u => `<option value="${u}"${u === h.unit ? ' selected' : ''}>${u}</option>`)
+                        .join('');
+                    return `<tr>
+        <td class="c-name">${ing.name}</td>
+        <td class="c-req" id="req-${i}">—</td>
+        <td>
+          <input class="have-amount" type="number" min="0" step="any" inputmode="decimal"
+                 data-name="${ing.name}" value="${h.amount}" placeholder="۰">
+        </td>
+        <td><select class="have-unit" data-name="${ing.name}">${unitOpts}</select></td>
+      </tr>`;
+                }).join('');
+
+                tbody.querySelectorAll('.have-amount').forEach(inp => {
+                    inp.addEventListener('input', e => {
+                        state.have[e.target.dataset.name].amount = e.target.value;
+                        updateDynamic();
+                    });
+                });
+
+                tbody.querySelectorAll('.have-unit').forEach(sel => {
+                    sel.addEventListener('change', e => {
+                        state.have[e.target.dataset.name].unit = e.target.value;
+                        updateDynamic();
+                    });
+                });
+            }
+
+            /* ---------- live update ---------- */
+            function updateDynamic() {
+                const food = currentFood();
+                if (!food) return;
+
+                food.ingredients.forEach((ing, i) => {
+                    const cell = document.getElementById('req-' + i);
+                    if (cell) cell.textContent = fmtAmount(ing.perPerson * state.people, ing.unit);
+                });
+
+                renderResults();
+            }
+
+            function renderResults() {
+                const food = currentFood();
+                if (!food) return;
+
+                const rows = food.ingredients.map(ing => {
+                    const need = ing.perPerson * state.people;
+                    const h = state.have[ing.name] || { amount: '', unit: ing.unit };
+                    const factor = UNIT_INFO[h.unit] ? UNIT_INFO[h.unit].factor : 1;
+                    const have = (parseFloat(h.amount) || 0) * factor;
+
+                    let buy = need - have;
+                    if (buy <= 1e-9) {
+                        buy = 0;
+                    } else if (COUNT_UNITS.has(ing.unit)) {
+                        // can't buy 2.3 eggs -> round up
+                        buy = ing.unit === 'عدد'
+                            ? Math.ceil(buy - 1e-9)
+                            : Math.ceil(buy * 2 - 1e-9) / 2;
+                    }
+                    return { ing, need, have: Math.max(0, Math.min(have, need)), buy };
+                });
+
+                const toBuy = rows.filter(r => r.buy > 0);
+                const covered = rows.filter(r => r.buy <= 0);
+
+                $('#summary').innerHTML =
+                    `برای <b>${toFa(state.people)}</b> نفر — <b>${toFa(toBuy.length)}</b> قلم خرید لازم است.`;
+
+                $('#buyList').innerHTML = toBuy.length === 0
+                    ? '<p class="all-ok">🎉 همه مواد لازم را دارید؛ نیازی به خرید نیست.</p>'
+                    : toBuy.map(r => `
+          <div class="buy-item">
+            <div>
+              <div class="name">${r.ing.name}</div>
+              <div class="detail">لازم: ${fmtAmount(r.need, r.ing.unit)}${r.have > 0 ? ` — دارید: ${fmtAmount(r.have, r.ing.unit)}` : ''
+                        }</div>
+            </div>
+            <div class="amt">${fmtAmount(r.buy, r.ing.unit)}</div>
+          </div>`).join('');
+
+                $('#coveredBox').innerHTML = covered.length
+                    ? `<div class="covered">✔ تأمین شده: ${covered.map(r => r.ing.name).join('، ')}</div>`
+                    : '';
+            }
+
+            /* ---------- init ---------- */
+            function init() {
+                renderFoods();
+                $('#peopleInput').value = state.people;
+
+                $('#peopleInput').addEventListener('input', e => setPeople(e.target.value));
+                $('#plus').addEventListener('click', () => setPeople(state.people + 1));
+                $('#minus').addEventListener('click', () => setPeople(state.people - 1));
+
+                // auto-select the first food so the page isn't empty
+                selectFood(FOODS[0].id);
+            }
+
+            init();
+        })();
+    </script>
+</body>
+
+</html>

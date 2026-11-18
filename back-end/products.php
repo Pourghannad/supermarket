@@ -17,7 +17,6 @@ const USER_AGENT      = 'ok/1.0';
 
 /**
  * Common headers required by the Okala gateway.
- * These are taken from the public web/app client.
  */
 function okalaHeaders(): array {
     return [
@@ -31,8 +30,15 @@ function okalaHeaders(): array {
 }
 
 /**
- * Standardized JSON error – used only for fatal input errors (e.g. missing coordinates).
+ * Headers used for the JSON POST offers endpoint.
  */
+function okalaJsonHeaders(): array {
+    return array_merge(okalaHeaders(), [
+        'Accept: application/json, text/plain, */*',
+        'Content-Type: application/json',
+    ]);
+}
+
 function sendJsonError(int $statusCode, string $message, array $extra = []): void {
     error_log("API Error [$statusCode]: $message" . (!empty($extra) ? ' | ' . json_encode($extra) : ''));
     http_response_code($statusCode);
@@ -43,12 +49,13 @@ function sendJsonError(int $statusCode, string $message, array $extra = []): voi
 }
 
 /**
- * Concurrent fetch with per‑request header override.
+ * Concurrent fetch. Each entry can be GET (default) or POST with a body.
  *
- * @param array $urls  ['identifier' => 'url']
- * @param array $headersByKey  Optional: ['identifier' => [header lines]]
+ * @param array $urls          ['identifier' => 'url']
+ * @param array $headersByKey  ['identifier' => [header lines]]
+ * @param array $optionsByKey  ['identifier' => ['method' => 'POST', 'postFields' => '...json...']]
  */
-function fetchApiMulti(array $urls, array $headersByKey = []): array {
+function fetchApiMulti(array $urls, array $headersByKey = [], array $optionsByKey = []): array {
     if (empty($urls)) return [];
 
     $mh = curl_multi_init();
@@ -56,8 +63,13 @@ function fetchApiMulti(array $urls, array $headersByKey = []): array {
 
     foreach ($urls as $key => $url) {
         $ch = curl_init();
-        $headers = $headersByKey[$key] ?? ['Accept: application/json'];
-        curl_setopt_array($ch, [
+
+        $headers    = $headersByKey[$key] ?? ['Accept: application/json'];
+        $opts       = $optionsByKey[$key] ?? [];
+        $method     = strtoupper($opts['method'] ?? 'GET');
+        $postFields = $opts['postFields'] ?? null;
+
+        $curlOpts = [
             CURLOPT_URL            => $url,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
@@ -65,7 +77,16 @@ function fetchApiMulti(array $urls, array $headersByKey = []): array {
             CURLOPT_USERAGENT      => USER_AGENT,
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_HTTPHEADER     => $headers,
-        ]);
+        ];
+
+        if ($method === 'POST') {
+            $curlOpts[CURLOPT_POST] = true;
+            if ($postFields !== null) {
+                $curlOpts[CURLOPT_POSTFIELDS] = $postFields;
+            }
+        }
+
+        curl_setopt_array($ch, $curlOpts);
         curl_multi_add_handle($mh, $ch);
         $curlArray[$key] = $ch;
     }
@@ -100,7 +121,7 @@ function fetchApiMulti(array $urls, array $headersByKey = []): array {
 }
 
 // ------------------------------------------------------------------
-// 1. Input validation (fatal – cannot proceed without coordinates)
+// 1. Input validation
 // ------------------------------------------------------------------
 $latitude  = $_GET['latitude']  ?? null;
 $longitude = $_GET['longitude'] ?? null;
@@ -117,7 +138,7 @@ if ($lat < -90 || $lat > 90 || $lon < -180 || $lon > 180) {
 }
 
 // ------------------------------------------------------------------
-// 2. BATCH 1 – Okala stores + Digikalajet main page
+// 2. BATCH 1 – Okala stores + Digikalajet main page (still GET)
 // ------------------------------------------------------------------
 $storesUrl = API_BASE . STORES_ENDPOINT . '?' . http_build_query([
     'latitude'  => $lat,
@@ -135,13 +156,13 @@ $batch1 = fetchApiMulti(
         'digikala_main' => $mainPageUrl,
     ],
     [
-        'okala_stores' => okalaHeaders(),   // required by Okala
+        'okala_stores' => okalaHeaders(),
     ]
 );
 
 $warnings = [];
 
-// --- Okala stores (fatal only for Okala side, but we still continue) ---
+// --- Okala stores ---
 $storesResult = $batch1['okala_stores'];
 $storeIds = [];
 
@@ -157,7 +178,6 @@ if ($storesResult['body'] === null) {
                 if (isset($s['storeId'])) $storeIds[] = (string)$s['storeId'];
             }
         }
-        // fallback: recursive search for storeId
         if (empty($storeIds)) {
             $it = new RecursiveIteratorIterator(new RecursiveArrayIterator($data));
             foreach ($it as $k => $v) {
@@ -172,7 +192,7 @@ if ($storesResult['body'] === null) {
     }
 }
 
-// --- Digikalajet main page (non‑fatal) ---
+// --- Digikalajet main page ---
 $mainPageResult = $batch1['digikala_main'];
 $digikalaDetailUrls = [];
 
@@ -200,45 +220,54 @@ if ($mainPageResult['body'] === null) {
 }
 
 // ------------------------------------------------------------------
-// 3. BATCH 2 – Okala offers + Digikalajet detail endpoints
+// 3. BATCH 2 – Okala offers (POST JSON) + Digikalajet detail (GET)
 // ------------------------------------------------------------------
-$okalaProducts   = [];
+$okalaProducts    = [];
 $digikalaProducts = [];
 
-// Build Okala offers URL only if we have store IDs
-$offersUrl = null;
+$batch2Urls     = $digikalaDetailUrls;
+$batch2Headers  = [];
+$batch2Options  = [];
+
+// Build Okala offers POST only if we have store IDs
 if (!empty($storeIds)) {
-    $query = http_build_query([
-        'pageType'  => 'HomePage',
-        'storeIds'  => $storeIds,   // http_build_query repeats the key
-        'latitude'  => $lat,
-        'longitude' => $lon,
-    ]);
-    $offersUrl = API_BASE . OFFERS_ENDPOINT . '?' . $query;
+    $storesPayload = [];
+    foreach ($storeIds as $sid) {
+        if (is_numeric($sid)) {
+            $storesPayload[] = ['id' => (int)$sid];
+        }
+    }
+
+    if (!empty($storesPayload)) {
+        $offersUrl = API_BASE . OFFERS_ENDPOINT;
+        $offersBody = json_encode([
+            'pageType' => 'HomePage',
+            'stores'   => $storesPayload,
+        ], JSON_UNESCAPED_UNICODE);
+
+        $batch2Urls['okala_offers']    = $offersUrl;
+        $batch2Headers['okala_offers'] = okalaJsonHeaders();
+        $batch2Options['okala_offers'] = [
+            'method'     => 'POST',
+            'postFields' => $offersBody,
+        ];
+    } else {
+        $warnings[] = 'Skipping Okala offers – no numeric store IDs available';
+    }
+} else {
+    $warnings[] = 'Skipping Okala offers – no store IDs available';
 }
 
-$batch2Urls = $digikalaDetailUrls; // start with Digikala
-if ($offersUrl !== null) {
-    $batch2Urls['okala_offers'] = $offersUrl;
-}
-
-$batch2Headers = [];
-if ($offersUrl !== null) {
-    $batch2Headers['okala_offers'] = okalaHeaders();
-}
-
-$batch2 = fetchApiMulti($batch2Urls, $batch2Headers);
+$batch2 = fetchApiMulti($batch2Urls, $batch2Headers, $batch2Options);
 
 // --- Okala offers ---
-if ($offersUrl !== null) {
-    $offersResult = $batch2['okala_offers'] ?? null;
-    if ($offersResult === null) {
-        $warnings[] = 'Okala offers request was not made';
-    } elseif ($offersResult['body'] === null) {
+if (isset($batch2['okala_offers'])) {
+    $offersResult = $batch2['okala_offers'];
+    if ($offersResult['body'] === null) {
         $warnings[] = 'Okala offers cURL error: ' . $offersResult['error'];
     } elseif ($offersResult['code'] !== 200) {
         $warnings[] = 'Okala offers HTTP ' . $offersResult['code'];
-        error_log("Okala offers HTTP {$offersResult['code']} | URL: $offersUrl | Body: " . substr($offersResult['body'], 0, 300));
+        error_log("Okala offers HTTP {$offersResult['code']} | Body: " . substr((string)$offersResult['body'], 0, 300));
     } else {
         $offersData = json_decode($offersResult['body'], true);
         if (is_array($offersData) && isset($offersData['carousels'])) {
@@ -252,8 +281,6 @@ if ($offersUrl !== null) {
             }
         }
     }
-} else {
-    $warnings[] = 'Skipping Okala offers – no store IDs available';
 }
 
 // --- Digikalajet details ---
@@ -281,12 +308,12 @@ foreach ($digikalaDetailUrls as $key => $url) {
 }
 
 // ------------------------------------------------------------------
-// 4. Always return 200 with whatever was collected
+// 4. Response
 // ------------------------------------------------------------------
 $allProducts = array_merge($okalaProducts, $digikalaProducts);
 
 $response = [
-    'success'           => true, // request was processed, even if one source failed
+    'success'           => true,
     'total_products'    => count($allProducts),
     'okala_count'       => count($okalaProducts),
     'digikalajet_count' => count($digikalaProducts),
